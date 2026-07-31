@@ -719,66 +719,131 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTracklist(filtered);
     }
 
-    // Render Top Artists Badges
-    function renderTopArtists(tracks) {
-        const artistCounts = {};
-        tracks.forEach(t => {
-            artistCounts[t.artist] = (artistCounts[t.artist] || 0) + 1;
-        });
-
-        const sortedArtists = Object.keys(artistCounts).sort((a, b) => artistCounts[b] - artistCounts[a]).slice(0, 6);
-        
+    // Render Top Artists Badges (Supports Single & Compare Mode)
+    function renderTopArtists(tracksA, tracksB, nameA, nameB) {
         const container = document.getElementById('top-artists');
+        if (!container) return;
         container.innerHTML = '';
 
-        sortedArtists.forEach(artist => {
-            const badge = document.createElement('div');
-            badge.className = 'artist-badge';
-            badge.innerHTML = `<i class="fa-solid fa-microphone font-icon"></i> ${artist}`;
-            container.appendChild(badge);
-        });
+        const getTop6 = (trk) => {
+            const counts = {};
+            trk.forEach(t => { if (t && t.artist) counts[t.artist] = (counts[t.artist] || 0) + 1; });
+            return Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 4);
+        };
+
+        if (tracksB && tracksB.length > 0) {
+            // Compare Mode: Render grouped badges for Playlist A and Playlist B
+            const topA = getTop6(tracksA);
+            const topB = getTop6(tracksB);
+
+            const groupA = document.createElement('div');
+            groupA.className = 'compare-artist-group';
+            groupA.innerHTML = `<div class="compare-artist-group-title tag-a"><i class="fa-solid fa-microphone"></i> 1. Liste: ${nameA || 'Playlist A'}</div><div class="artists-list"></div>`;
+            const listA = groupA.querySelector('.artists-list');
+            topA.forEach(art => {
+                const b = document.createElement('div');
+                b.className = 'artist-badge badge-a';
+                b.innerHTML = `<i class="fa-solid fa-microphone"></i> ${art}`;
+                listA.appendChild(b);
+            });
+            container.appendChild(groupA);
+
+            const groupB = document.createElement('div');
+            groupB.className = 'compare-artist-group';
+            groupB.innerHTML = `<div class="compare-artist-group-title tag-b"><i class="fa-solid fa-microphone"></i> 2. Liste: ${nameB || 'Playlist B'}</div><div class="artists-list"></div>`;
+            const listB = groupB.querySelector('.artists-list');
+            topB.forEach(art => {
+                const b = document.createElement('div');
+                b.className = 'artist-badge badge-b';
+                b.innerHTML = `<i class="fa-solid fa-microphone"></i> ${art}`;
+                listB.appendChild(b);
+            });
+            container.appendChild(groupB);
+        } else {
+            // Single Mode
+            const top = getTop6(tracksA || []);
+            top.forEach(artist => {
+                const badge = document.createElement('div');
+                badge.className = 'artist-badge';
+                badge.innerHTML = `<i class="fa-solid fa-microphone font-icon"></i> ${artist}`;
+                container.appendChild(badge);
+            });
+        }
     }
 
-    // Generate AI Mood Summary Paragraph
-    function generateMoodSummary(energy, valence, dance, tempo) {
+    // Generate AI Mood Summary Paragraph (Supports Single & Compare Mode)
+    function generateMoodSummary(energy, valence, dance, tempo, metricsB, nameA, nameB) {
         let summary = "";
         
-        if (energy > 70 && dance > 70) {
-            summary = "Bu liste yüksek enerji ve ritim yüklü! Parti, spor veya motivasyon aradığınız anlar için mükemmel bir dans ve tempo kombinasyonu sunuyor.";
-        } else if (energy < 45 && valence < 50) {
-            summary = "Derin, huzurlu ve melankolik bir atmosfer. Gece dinlemeleri, odaklanma veya rahatlama anları için birebir sakinlikte.";
-        } else if (dance > 65) {
-            summary = "Akan ritimleri ve groovy melodileriyle gün içinde modunuzu yükseltecek, dinlerken eşlik etmesi keyifli bir akışa sahip.";
+        if (metricsB) {
+            const moodA = valence > 60 ? 'pozitif ve hareketli' : (valence < 45 ? 'melankolik ve duygu yüklü' : 'dengeli');
+            const moodB = metricsB.valence > 60 ? 'pozitif ve hareketli' : (metricsB.valence < 45 ? 'melankolik ve duygu yüklü' : 'dengeli');
+            const energyDiff = energy - metricsB.energy;
+            const energyText = Math.abs(energyDiff) > 15 ? 
+                (energyDiff > 0 ? `"${nameA}" %${energyDiff} daha yüksek enerjiye sahip.` : `"${nameB}" %${Math.abs(energyDiff)} daha yüksek enerjiye sahip.`) : 
+                'Her iki listenin enerji seviyeleri birbirine son derece yakın.';
+
+            summary = `"${nameA}" genel olarak ${moodA} bir atmosfere sahipken, "${nameB}" ise ${moodB} bir yapı sunuyor. ${energyText}`;
         } else {
-            summary = "Dengeli temposu ve uyumlu melodi geçişleriyle günün her anında arka planda eşlik edebilecek çok yönlü bir çalma listesi.";
+            if (energy > 70 && dance > 70) {
+                summary = "Bu liste yüksek enerji ve ritim yüklü! Parti, spor veya motivasyon aradığınız anlar için mükemmel bir dans ve tempo kombinasyonu sunuyor.";
+            } else if (energy < 45 && valence < 50) {
+                summary = "Derin, huzurlu ve melankolik bir atmosfer. Gece dinlemeleri, odaklanma veya rahatlama anları için birebir sakinlikte.";
+            } else if (dance > 65) {
+                summary = "Akan ritimleri ve groovy melodileriyle gün içinde modunuzu yükseltecek, dinlerken eşlik etmesi keyifli bir akışa sahip.";
+            } else {
+                summary = "Dengeli temposu ve uyumlu melodi geçişleriyle günün her anında arka planda eşlik edebilecek çok yönlü bir çalma listesi.";
+            }
         }
 
-        document.getElementById('mood-summary-text').textContent = summary;
+        const moodEl = document.getElementById('mood-summary-text');
+        if (moodEl) moodEl.textContent = summary;
     }
 
-    // Chart 1: Radar Chart (Audio Profile)
-    function renderRadarChart(energy, dance, valence, acoustic, tempoNorm) {
-        const ctx = document.getElementById('radarChart').getContext('2d');
+    // Chart 1: Radar Chart (Audio Profile - Supports Dual Dataset Compare Mode)
+    function renderRadarChart(energy, dance, valence, acoustic, tempoNorm, metricsB, nameA, nameB) {
+        const ctx = document.getElementById('radarChart')?.getContext('2d');
+        if (!ctx) return;
 
         if (radarChartInstance) {
             radarChartInstance.destroy();
+        }
+
+        const datasets = [
+            {
+                label: nameA || '1. Liste',
+                data: [energy, dance, valence, acoustic, tempoNorm],
+                backgroundColor: 'rgba(29, 185, 84, 0.25)',
+                borderColor: '#1DB954',
+                borderWidth: 2,
+                pointBackgroundColor: '#1DB954',
+                pointBorderColor: '#fff',
+            }
+        ];
+
+        if (metricsB) {
+            datasets.push({
+                label: nameB || '2. Liste',
+                data: [
+                    metricsB.energy,
+                    metricsB.dance,
+                    metricsB.valence,
+                    metricsB.acoustic,
+                    Math.round((metricsB.tempo / 180) * 100)
+                ],
+                backgroundColor: 'rgba(155, 89, 244, 0.25)',
+                borderColor: '#9b59f4',
+                borderWidth: 2,
+                pointBackgroundColor: '#9b59f4',
+                pointBorderColor: '#fff',
+            });
         }
 
         radarChartInstance = new Chart(ctx, {
             type: 'radar',
             data: {
                 labels: ['Enerji', 'Dans Edilebilirlik', 'Pozitiflik', 'Akustiklik', 'Tempo Skoru'],
-                datasets: [{
-                    label: 'Ses Profili (%)',
-                    data: [energy, dance, valence, acoustic, tempoNorm],
-                    backgroundColor: 'rgba(29, 185, 84, 0.25)',
-                    borderColor: '#1DB954',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#1DB954',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#1DB954'
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -795,59 +860,115 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 plugins: {
-                    legend: { display: false }
+                    legend: {
+                        display: !!metricsB,
+                        position: 'bottom',
+                        labels: { color: '#94A3B8', font: { size: 11 } }
+                    }
                 }
             }
         });
     }
 
-    // Chart 2: Bar Chart (Track Popularity Spectrum)
-    function renderBarChart(tracks) {
-        const ctx = document.getElementById('barChart').getContext('2d');
+    // Chart 2: Bar Chart (Track Popularity Spectrum - Supports Compare Mode)
+    function renderBarChart(tracksA, tracksB, nameA, nameB) {
+        const ctx = document.getElementById('barChart')?.getContext('2d');
+        if (!ctx) return;
 
         if (barChartInstance) {
             barChartInstance.destroy();
         }
 
-        const labels = tracks.slice(0, 7).map(t => t.name.length > 12 ? t.name.substr(0, 12) + '...' : t.name);
-        const popularities = tracks.slice(0, 7).map(t => t.popularity);
+        if (tracksB && tracksB.length > 0) {
+            // Dual Bar Chart Comparison
+            const count = Math.min(5, Math.max(tracksA.length, tracksB.length));
+            const labels = Array.from({ length: count }, (_, i) => `Sıra #${i + 1}`);
+            const popA = tracksA.slice(0, count).map(t => t.popularity || 50);
+            const popB = tracksB.slice(0, count).map(t => t.popularity || 50);
 
-        barChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Popülerlik Skoru',
-                    data: popularities,
-                    backgroundColor: [
-                        'rgba(29, 185, 84, 0.7)',
-                        'rgba(156, 39, 176, 0.7)',
-                        'rgba(0, 180, 216, 0.7)',
-                        'rgba(255, 123, 0, 0.7)',
-                        'rgba(247, 37, 133, 0.7)'
-                    ],
-                    borderRadius: 8,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#94A3B8', font: { size: 10 } }
-                    },
-                    y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#94A3B8', max: 100 }
-                    }
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: nameA || '1. Liste',
+                            data: popA,
+                            backgroundColor: 'rgba(29, 185, 84, 0.8)',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: nameB || '2. Liste',
+                            data: popB,
+                            backgroundColor: 'rgba(155, 89, 244, 0.8)',
+                            borderRadius: 6,
+                        }
+                    ]
                 },
-                plugins: {
-                    legend: { display: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94A3B8', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94A3B8', max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { color: '#94A3B8', font: { size: 11 } }
+                        }
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            // Single Mode
+            const labels = (tracksA || []).slice(0, 7).map(t => t.name.length > 12 ? t.name.substr(0, 12) + '...' : t.name);
+            const popularities = (tracksA || []).slice(0, 7).map(t => t.popularity);
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Popülerlik Skoru',
+                        data: popularities,
+                        backgroundColor: [
+                            'rgba(29, 185, 84, 0.7)',
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(0, 180, 216, 0.7)',
+                            'rgba(255, 123, 0, 0.7)',
+                            'rgba(247, 37, 133, 0.7)'
+                        ],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94A3B8', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94A3B8', max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
     }
 
     // UI Loading State Toggle
@@ -1119,6 +1240,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render both tracklists side-by-side
         renderCompareTracklist('compare-tracklist-a', tracksA);
         renderCompareTracklist('compare-tracklist-b', dataB.tracks);
+
+        // ALSO Update Main Dashboard Charts & Artists & Mood for Dual Comparison Mode!
+        renderRadarChart(metricsA.energy, metricsA.dance, metricsA.valence, metricsA.acoustic, Math.round((metricsA.tempo/200)*100), metricsB, nameA, dataB.title);
+        renderBarChart(tracksA, dataB.tracks, nameA, dataB.title);
+        renderTopArtists(tracksA, dataB.tracks, nameA, dataB.title);
+        generateMoodSummary(metricsA.energy, metricsA.valence, metricsA.dance, metricsA.tempo, metricsB, nameA, dataB.title);
 
         compareResult.style.display = 'block';
         compareResult.scrollIntoView({ behavior: 'smooth' });

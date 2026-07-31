@@ -1271,6 +1271,36 @@ body {
     background: rgba(29, 185, 84, 0.1);
 }
 
+.artist-badge.badge-a {
+    border-color: rgba(29, 185, 84, 0.4);
+    background: rgba(29, 185, 84, 0.08);
+}
+.artist-badge.badge-a i { color: #1DB954; }
+
+.artist-badge.badge-b {
+    border-color: rgba(155, 89, 244, 0.4);
+    background: rgba(155, 89, 244, 0.08);
+}
+.artist-badge.badge-b i { color: #9b59f4; }
+
+.compare-artist-group {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.compare-artist-group-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.compare-artist-group-title.tag-a { color: #1DB954; }
+.compare-artist-group-title.tag-b { color: #9b59f4; }
+
 .artist-badge i {
     color: var(--spotify-green);
     font-size: 0.75rem;
