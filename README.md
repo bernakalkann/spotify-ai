@@ -1,77 +1,90 @@
-# Spotify AI Playlist Analyzer
+# PulseStream: Spotify Playlist AI Analyzer & Comparison Platform
 
-Spotify çalma listelerini analiz eden ve ses profillerini görselleştiren bir yapay zeka destekli web uygulaması. Bu proje, Retrieval-Augmented Generation (RAG) mimarisinin gerçek hayattaki bir müzik analizi senaryosuna nasıl uygulanabileceğini göstermek amacıyla geliştirilmiştir.
+PulseStream, Spotify çalma listelerini derinlemesine analiz eden, ses metriklerini karşılaştıran ve görsel veri panelleri sunan yapay zeka odaklı bir web uygulamasıdır. 
 
----
-
-## Yapay Zeka Mimarisi: RAG (Retrieval-Augmented Generation)
-
-RAG, büyük dil modellerinin veya analitik sistemlerin dış bir veri kaynağından bilgi almasını (retrieval), bu bilgiyi mevcut bağlamla zenginleştirmesini (augmentation) ve kullanıcıya anlamlı bir çıktı üretmesini (generation) sağlayan bir mimaridir.
-
-Bu projede RAG şu şekilde çalışır:
-
-### 1. Retrieval — Veri Çekme
-Kullanıcı bir Spotify playlist URL'si girer. Python backend, Spotify'ın embed sayfasını `urllib` ile getirir ve sayfanın içine gömülü `__NEXT_DATA__` JSON nesnesini parse eder. Bu nesne, Next.js tarafından sunucu tarafında render edilen ve gerçek şarkı listesini içeren yapılandırılmamış veridir.
-
-```python
-# Spotify embed sayfasından __NEXT_DATA__ çıkarımı
-match = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.DOTALL)
-state = json.loads(match.group(1))
-```
-
-### 2. Augmentation — Veri Zenginleştirme
-Ham şarkı verisi (isim, sanatçı, süre) tek başına analiz için yeterli değildir. Her şarkı için enerji, dans edilebilirlik, pozitiflik (valence), tempo ve akustiklik metrikleri deterministik bir seed fonksiyonu aracılığıyla üretilir. Bu yaklaşım, Spotify'ın resmi Audio Features API'sine ihtiyaç duymadan ses profilini tahmin etmeye benzer bir augmentation katmanı oluşturur.
-
-### 3. Generation — Analiz ve Görselleştirme
-Zenginleştirilmiş veri kullanılarak:
-- Radar ve bar grafikleri (Chart.js) ile ses profili görselleştirilir
-- Listenin genel ruh hali doğal dil olarak özetlenir
-- Kullanıcı, listeyi enerji veya duygu durumuna göre sıralayabilir
-
-Bu üç aşama birleşerek ham bir playlist URL'sini, yorumlanabilir bir müzik analiz raporuna dönüştürür.
+Bu proje, yapay zeka (AI) ve veri işleme teknolojilerini öğrenme sürecinde pratik deneyim kazanmak ve teorik kavramları pekiştirmek amacıyla geliştirilmiştir.
 
 ---
 
-## Teknik Altyapı
+## Ekran Görüntüleri ve Arayüz Yapısı
 
-| Bileşen | Teknoloji |
-|---|---|
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Grafik | Chart.js (Radar, Bar) |
-| Backend | Python 3, `http.server`, `ThreadingMixIn` |
-| Veri Kaynağı | Spotify Embed `__NEXT_DATA__` (Next.js SSR state) |
-| Sunucu | Multi-threaded HTTP Server (port 3005) |
+### 1. Ana Arama ve Mod Seçim Paneli
+Kullanıcının tekli playlist analizi ile ikili playlist karşılaştırma (VS) modları arasında geçiş yapmasını sağlayan şeffaf cam efektli (Glassmorphic) arayüz.
+
+![Ana Arama ve Mod Seçim Paneli](docs/images/header_search.png)
+
+### 2. İkili Playlist Karşılaştırması (VS Modu)
+İki farklı Spotify çalma listesinin şarkılarının yan yana listelendiği, ses profili farklarının gösterildiği karşılaştırma ekranı.
+
+![İkili Playlist Karşılaştırması](docs/images/compare_tracklists.png)
+
+### 3. Ses Profili ve Popülerlik Analiz Paneli
+Radar grafik (Ses Profili) ve Bar grafik (Popülerlik Dağılımı) ile playlist metriklerinin çok boyutlu görselleştirmesi.
+
+![Dashboard ve Analiz Paneli](docs/images/dashboard_charts.png)
+
+### 4. Öne Çıkan Sanatçılar ve Bağlamsal Özet
+Listenin en çok tekrarlanan sanatçıları ve metrik farklarına göre dinamik olarak oluşturulan içerik özeti.
+
+![Öne Çıkan Sanatçılar ve Özet](docs/images/artists_mood_summary.png)
 
 ---
 
-## Kurulum
+## Yapay Zeka Öğrenme Sürecinde Pekiştirilen Kavramlar
 
+Bu projenin geliştirilmesi sırasında aşağıdaki temel yapay zeka, veri bilimi ve yazılım mimarisi kavramları uygulamalı olarak pekiştirilmiştir:
+
+### 1. Retrieval-Augmented Generation (RAG) Mimarisi
+Proje, veri getirme, veriyi zenginleştirme ve çıktı üretme adımlarını kapsayan RAG yapısını simüle etmektedir:
+* **Retrieval (Veri Getirme):** Spotify gömülü sayfalarından `__NEXT_DATA__` SSR verileri Python backend aracılığıyla çekilir.
+* **Augmentation (Veri Zenginleştirme):** Şarkıların ses özellikleri (Enerji, Dansabilite, Pozitiflik, Akustiklik, Tempo) deterministik vektör metriklerine dönüştürülür.
+* **Generation (Çıktı Üretimi):** Zenginleştirilen veri kümesinden iki playlist arasındaki atmosfer farklarını açıklayan metinsel özetler ve çok boyutlu radar/bar grafikleri üretilir.
+
+### 2. Çok Kriterli Veri Sıralama ve Eşzamanlı Senkronizasyon
+* Liste üzerindeki parçaların melankoli (Valence), enerji ve popülerlik skoru değerlerine göre sıralanması.
+* İkili karşılaştırma modunda her iki listenin bağımsız ve eşzamanlı olarak aynı kuralla sıralanması.
+
+### 3. Çok Boyutlu Veri Görselleştirme (Multi-Dimensional Data Visualization)
+* Ses metriklerinin 5 eksenli Radar Grafiği üzerinde çakıştırılarak görselleştirilmesi.
+* Şarkı popülerlik skorlarının grup bar grafikler üzerinde karşılaştırılması.
+
+### 4. Kullanıcı Durum Yönetimi ve İstemci Tarafı Kalıcılık
+* LocalStorage tabanlı oturum yönetimi, geçmiş aramalar ve kullanıcıya özel favori liste saklama paneli.
+
+---
+
+## Proje Özellikleri
+
+* **Tekli Playlist Analizi:** Herkese açık Spotify bağlantılarının ses profili, ortalama süresi ve metrik analizi.
+* **Çiftli Playlist Karşılaştırması (VS Modu):** İki listenin radarda üst üste bindirilmiş grafik analizi ve side-by-side şarkı karşılaştırması.
+* **Akıllı Sıralama:** Melankoli, Enerji, Popülerlik ve Karıştırma modları.
+* **YouTube Music Entegrasyonu:** Spotify 30 saniye önizleme kısıtlamasını aşmak için her şarkının yanındaki YouTube Music doğrudan dinleme bağlantısı.
+* **Kullanıcı Hesabı ve Favori Listeler:** Kullanıcı oturumu ile favori playlist saklama ve kayan yan panel (Drawer).
+
+---
+
+## Teknik Mimarisi
+
+* **Frontend:** HTML5, Vanilla CSS3 (Custom Glassmorphism Design System), Javascript (ES6+), Chart.js
+* **Backend:** Python 3 (Multi-threaded HTTP Server, Scraper Engine)
+* **Veri Kaynağı:** Spotify Open Embed Metadata API Parsing
+
+---
+
+## Kurulum ve Çalıştırma
+
+1. Proje dizininde sunucuyu başlatın:
 ```bash
 python3 server.py
 ```
 
-Sunucu `http://localhost:3005` adresinde başlar. Ek bağımlılık gerekmez.
+2. Tarayıcıda uygulamayı açın:
+```text
+http://localhost:3005
+```
 
 ---
 
-## Kullanım
+## Lisans
 
-1. Spotify'dan herkese açık bir playlist bağlantısı kopyalayın
-2. Arama kutusuna yapıştırın — analiz otomatik olarak başlar
-3. Şarkı listesi, ses profili grafikleri ve ruh hali özetini inceleyin
-4. Sıralama butonlarıyla listeyi melankolik, enerjik veya popülerlik sırasına göre düzenleyin
-5. Herhangi bir şarkıya tıklayarak embed Spotify oynatıcısında dinleyin
-
----
-
-## Öğrenme Hedefleri
-
-Bu projeyi geliştirirken aşağıdaki yapay zeka ve yazılım mühendisliği kavramları incelenmiştir:
-
-- RAG (Retrieval-Augmented Generation) mimarisinin temel katmanları
-- Web scraping ile yapılandırılmamış veriden veri çıkarımı
-- Deterministik seed fonksiyonlarıyla veri augmentation
-- Ses analizi metriklerinin (valence, energy, tempo) anlamı ve yorumlanması
-- Multi-threaded sunucu mimarisi ile eşzamanlı istek yönetimi
-- Frontend'de dinamik veri görselleştirme
-
+Bu proje eğitim ve kişisel gelişim amacıyla hazırlanmıştır.
