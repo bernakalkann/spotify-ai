@@ -63,27 +63,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function showToast(msg) {
+        let toast = document.getElementById('sort-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'sort-toast';
+            toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(30,215,96,0.15);border:1px solid rgba(30,215,96,0.4);color:#1ED760;padding:10px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:9999;backdrop-filter:blur(12px);transition:opacity 0.3s;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => toast.style.opacity = '0', 2200);
+    }
+
     function applyTrackSortMode(mode) {
-        if (!currentTracks || currentTracks.length === 0) return;
+        if (!currentTracks || currentTracks.length === 0) {
+            showToast('⚡ Önce bir Spotify listesi analiz edin!');
+            return;
+        }
 
         let sorted = [...currentTracks];
 
         if (mode === 'sad') {
             sorted.sort((a, b) => a.valence - b.valence);
+            showToast('🌧 En melankolik şarkılar en başta');
         } else if (mode === 'energy') {
             sorted.sort((a, b) => b.energy - a.energy);
+            showToast('⚡ En yüksek enerjili şarkılar en başta');
         } else if (mode === 'popular') {
             sorted.sort((a, b) => b.popularity - a.popularity);
+            showToast('🔥 En popüler şarkılar en başta');
         } else if (mode === 'shuffle') {
             for (let i = sorted.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
             }
+            showToast('🔀 Liste karıştırıldı');
         } else if (mode === 'default') {
             sorted = [...originalPlaylistTracks];
+            showToast('↩ Orijinal sıralama geri yüklendi');
         }
 
-        renderDashboardWithTracks(sorted);
+        // Only re-render the tracklist, not the full dashboard (keeps charts intact)
+        renderTracklist(sorted);
     }
 
     if (btnOpenSpotify) {
