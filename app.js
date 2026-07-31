@@ -137,6 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const btnOpenYtMusic = document.getElementById('btn-open-yt-music');
+    if (btnOpenYtMusic) {
+        btnOpenYtMusic.addEventListener('click', () => {
+            const title = document.getElementById('playlist-title')?.textContent || '';
+            const query = title ? title : 'Spotify Playlist';
+            window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        });
+    }
+
     if (btnCopyLink) {
         btnCopyLink.addEventListener('click', () => {
             if (playlistInput.value) {
@@ -663,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const fallbackArt = MUSIC_ARTWORK_FALLBACKS[index % MUSIC_ARTWORK_FALLBACKS.length];
 
+            const ytUrl = `https://music.youtube.com/search?q=${encodeURIComponent(track.artist + ' ' + track.name)}`;
             item.innerHTML = `
                 <div class="track-left">
                     <span class="track-index">${index + 1}</span>
@@ -674,6 +684,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="track-right">
                     <span class="track-duration">${track.duration}</span>
+                    <a href="${ytUrl}" target="_blank" class="yt-music-btn" title="YouTube'da Tam Dinle (Yeni Sekme)" onclick="event.stopPropagation();">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
                     <div class="play-icon-btn"><i class="fa-solid fa-play"></i></div>
                 </div>
             `;
@@ -1127,6 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fallbackArt = MUSIC_ARTWORK_FALLBACKS[index % MUSIC_ARTWORK_FALLBACKS.length];
             const art = track.image || fallbackArt;
 
+            const ytUrl = `https://music.youtube.com/search?q=${encodeURIComponent(track.artist + ' ' + track.name)}`;
             item.innerHTML = `
                 <div class="track-left">
                     <span class="track-index">${index + 1}</span>
@@ -1138,6 +1152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="track-right">
                     <span class="track-duration">${track.duration || '3:00'}</span>
+                    <a href="${ytUrl}" target="_blank" class="yt-music-btn" title="YouTube'da Tam Dinle (Yeni Sekme)" onclick="event.stopPropagation();">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
                     <div class="play-icon-btn"><i class="fa-solid fa-play"></i></div>
                 </div>
             `;
