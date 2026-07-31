@@ -1078,5 +1078,344 @@ document.addEventListener('DOMContentLoaded', () => {
         compareResult.style.display = 'block';
         compareResult.scrollIntoView({ behavior: 'smooth' });
     }
+
+    // =====================================================================
+    // FEATURE: MODE SWITCHER (Single Analysis vs Dual VS Compare Mode)
+    // =====================================================================
+    const modeSingleBtn = document.getElementById('mode-single-btn');
+    const modeCompareBtn = document.getElementById('mode-compare-btn');
+    const singleSearchBox = document.getElementById('single-search-box');
+    const dualSearchBox = document.getElementById('dual-search-box');
+    const searchTitle = document.getElementById('search-title');
+    const searchSubtitle = document.getElementById('search-subtitle');
+
+    if (modeSingleBtn && modeCompareBtn) {
+        modeSingleBtn.addEventListener('click', () => {
+            modeSingleBtn.classList.add('active');
+            modeCompareBtn.classList.remove('active');
+            singleSearchBox.style.display = 'flex';
+            dualSearchBox.style.display = 'none';
+            if (searchTitle) searchTitle.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Çalma Listesini Analiz Et';
+            if (searchSubtitle) searchSubtitle.textContent = 'Herkese açık herhangi bir Spotify Playlist, Albüm veya Şarkı bağlantısını yapıştırın.';
+        });
+
+        modeCompareBtn.addEventListener('click', () => {
+            modeCompareBtn.classList.add('active');
+            modeSingleBtn.classList.remove('active');
+            singleSearchBox.style.display = 'none';
+            dualSearchBox.style.display = 'flex';
+            if (searchTitle) searchTitle.innerHTML = '<i class="fa-solid fa-code-compare"></i> ⚡ İki Playlist Karşılaştır (VS Modu)';
+            if (searchSubtitle) searchSubtitle.textContent = 'Karşılaştırmak istediğiniz iki Spotify Playlist bağlantısını aşağıya yapıştırın.';
+        });
+    }
+
+    const dualCompareBtn = document.getElementById('dual-compare-btn');
+    const compareInput1 = document.getElementById('compare-input-1');
+    const compareInput2 = document.getElementById('compare-input-2');
+
+    if (dualCompareBtn && compareInput1 && compareInput2) {
+        dualCompareBtn.addEventListener('click', async () => {
+            const url1 = compareInput1.value.trim();
+            const url2 = compareInput2.value.trim();
+
+            if (!url1 || !url2) {
+                showToast('Lütfen her iki playlist bağlantısını da girin');
+                return;
+            }
+
+            const parsed1 = parseSpotifyUrl(url1);
+            const parsed2 = parseSpotifyUrl(url2);
+
+            if (!parsed1 || !parsed2) {
+                showToast('Lütfen geçerli Spotify bağlantıları girin');
+                return;
+            }
+
+            const btnText = dualCompareBtn.querySelector('.btn-text');
+            const btnLoader = dualCompareBtn.querySelector('.btn-loader');
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoader) btnLoader.style.display = 'block';
+            dualCompareBtn.disabled = true;
+
+            try {
+                // Fetch Playlist 1
+                let dataA = null;
+                try { dataA = await fetchRealPlaylistData(parsed1.type, parsed1.id); } catch(e) {}
+                if (!dataA || !dataA.tracks || dataA.tracks.length === 0) {
+                    if (PRESET_DATABASE[parsed1.id]) dataA = PRESET_DATABASE[parsed1.id];
+                }
+
+                // Fetch Playlist 2
+                let dataB = null;
+                try { dataB = await fetchRealPlaylistData(parsed2.type, parsed2.id); } catch(e) {}
+                if (!dataB || !dataB.tracks || dataB.tracks.length === 0) {
+                    if (PRESET_DATABASE[parsed2.id]) dataB = PRESET_DATABASE[parsed2.id];
+                }
+
+                if (!dataA || !dataA.tracks || !dataB || !dataB.tracks) {
+                    showToast('Listelerden biri yüklenemedi. Lütfen bağlantıları kontrol edin.');
+                    return;
+                }
+
+                currentTracks = dataA.tracks;
+                renderDashboard(dataA, parsed1.id);
+
+                comparedDataB = dataB;
+                renderComparison(comparedDataB);
+                showToast('⚡ Karşılaştırma tamamlandı!');
+
+            } catch (err) {
+                console.error("VS Compare Error:", err);
+                showToast('Karşılaştırma sırasında bir hata oluştu');
+            } finally {
+                if (btnText) btnText.style.display = 'block';
+                if (btnLoader) btnLoader.style.display = 'none';
+                dualCompareBtn.disabled = false;
+            }
+        });
+    }
+
+    // =====================================================================
+    // FEATURE: USER AUTHENTICATION & SESSION SYSTEM
+    // =====================================================================
+    const loginModal = document.getElementById('login-modal');
+    const loginModalBtn = document.getElementById('login-modal-btn');
+    const closeLoginModalBtn = document.getElementById('close-login-modal-btn');
+    const userBtnLabel = document.getElementById('user-btn-label');
+    const tabLoginBtn = document.getElementById('tab-login-btn');
+    const tabRegisterBtn = document.getElementById('tab-register-btn');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const demoLoginBtn = document.getElementById('demo-login-btn');
+
+    let currentUser = localStorage.getItem('pulsestream_active_user') || null;
+
+    function updateAuthUI() {
+        if (currentUser) {
+            if (userBtnLabel) userBtnLabel.textContent = currentUser;
+            if (loginModalBtn) {
+                loginModalBtn.title = `${currentUser} (Çıkış yapmak için tıklayın)`;
+                loginModalBtn.style.borderColor = '#1DB954';
+            }
+        } else {
+            if (userBtnLabel) userBtnLabel.textContent = 'Giriş Yap / Kayıt Ol';
+            if (loginModalBtn) {
+                loginModalBtn.title = 'Giriş Yap veya Kayıt Ol';
+                loginModalBtn.style.borderColor = '';
+            }
+        }
+        renderSavedPlaylists();
+    }
+
+    if (loginModalBtn) {
+        loginModalBtn.addEventListener('click', () => {
+            if (currentUser) {
+                if (confirm(`${currentUser} hesabından çıkış yapmak istiyor musunuz?`)) {
+                    currentUser = null;
+                    localStorage.removeItem('pulsestream_active_user');
+                    updateAuthUI();
+                    showToast('Çıkış yapıldı');
+                }
+            } else {
+                if (loginModal) loginModal.style.display = 'flex';
+            }
+        });
+    }
+
+    if (closeLoginModalBtn && loginModal) {
+        closeLoginModalBtn.addEventListener('click', () => loginModal.style.display = 'none');
+    }
+
+    if (tabLoginBtn && tabRegisterBtn) {
+        tabLoginBtn.addEventListener('click', () => {
+            tabLoginBtn.classList.add('active');
+            tabRegisterBtn.classList.remove('active');
+            if (loginForm) loginForm.style.display = 'block';
+            if (registerForm) registerForm.style.display = 'none';
+        });
+
+        tabRegisterBtn.addEventListener('click', () => {
+            tabRegisterBtn.classList.add('active');
+            tabLoginBtn.classList.remove('active');
+            if (registerForm) registerForm.style.display = 'block';
+            if (loginForm) loginForm.style.display = 'none';
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username')?.value.trim();
+            if (username) {
+                currentUser = username;
+                localStorage.setItem('pulsestream_active_user', currentUser);
+                updateAuthUI();
+                if (loginModal) loginModal.style.display = 'none';
+                showToast(`Hoş geldiniz, ${currentUser}! 👋`);
+            }
+        });
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name')?.value.trim();
+            if (name) {
+                currentUser = name;
+                localStorage.setItem('pulsestream_active_user', currentUser);
+                updateAuthUI();
+                if (loginModal) loginModal.style.display = 'none';
+                showToast(`Hesabınız oluşturuldu. Hoş geldiniz, ${currentUser}! 🎉`);
+            }
+        });
+    }
+
+    if (demoLoginBtn) {
+        demoLoginBtn.addEventListener('click', () => {
+            currentUser = 'Berna Kalkan';
+            localStorage.setItem('pulsestream_active_user', currentUser);
+            updateAuthUI();
+            if (loginModal) loginModal.style.display = 'none';
+            showToast('Berna Kalkan olarak giriş yapıldı! 🚀');
+        });
+    }
+
+    // Initial auth UI load
+    updateAuthUI();
+
+    // =====================================================================
+    // FEATURE: SAVED PLAYLISTS DRAWER (Right Side Panel)
+    // =====================================================================
+    const savedDrawer = document.getElementById('saved-drawer');
+    const savedDrawerBtn = document.getElementById('saved-drawer-btn');
+    const closeDrawerBtn = document.getElementById('close-drawer-btn');
+    const savedPlaylistsList = document.getElementById('saved-playlists-list');
+    const savedBadgeCount = document.getElementById('saved-badge-count');
+    const btnSavePlaylist = document.getElementById('btn-save-playlist');
+    const saveBtnLabel = document.getElementById('save-btn-label');
+
+    function getSavedStorageKey() {
+        const userKey = currentUser ? currentUser.toLowerCase().replace(/\s+/g, '_') : 'guest';
+        return `pulsestream_saved_${userKey}`;
+    }
+
+    function getSavedPlaylists() {
+        try { return JSON.parse(localStorage.getItem(getSavedStorageKey())) || []; }
+        catch { return []; }
+    }
+
+    function saveSavedPlaylists(list) {
+        localStorage.setItem(getSavedStorageKey(), JSON.stringify(list));
+        renderSavedPlaylists();
+    }
+
+    function renderSavedPlaylists() {
+        const saved = getSavedPlaylists();
+        if (savedBadgeCount) savedBadgeCount.textContent = saved.length;
+
+        const drawerSubtitle = document.getElementById('drawer-user-subtitle');
+        if (drawerSubtitle) {
+            drawerSubtitle.textContent = currentUser ? 
+                `${currentUser} kullanıcısının kaydedilen çalma listeleri.` : 
+                'Beğendiğiniz tüm Spotify listelerini buraya kaydedebilirsiniz.';
+        }
+
+        if (!savedPlaylistsList) return;
+
+        if (saved.length === 0) {
+            savedPlaylistsList.innerHTML = `
+                <div style="text-align:center; padding:40px 10px; color:var(--text-muted);">
+                    <i class="fa-solid fa-bookmark" style="font-size:2.5rem; margin-bottom:12px; opacity:0.3;"></i>
+                    <p>Henüz kaydedilmiş çalma listeniz yok.</p>
+                </div>`;
+            return;
+        }
+
+        savedPlaylistsList.innerHTML = '';
+        saved.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'saved-item';
+            div.innerHTML = `
+                <img src="${item.cover}" alt="${item.title}" onerror="this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&q=80'">
+                <div class="saved-item-info">
+                    <div class="saved-item-title">${item.title}</div>
+                    <div class="saved-item-meta">${item.trackCount} şarkı · ${item.owner}</div>
+                </div>
+                <div class="saved-item-actions">
+                    <button class="saved-item-btn play-saved-btn" title="Analiz Et & Çal"><i class="fa-solid fa-play"></i></button>
+                    <button class="saved-item-btn delete-btn remove-saved-btn" title="Sil"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+
+            div.querySelector('.play-saved-btn').addEventListener('click', () => {
+                if (playlistInput) {
+                    playlistInput.value = item.url;
+                    if (clearBtn) clearBtn.style.display = 'block';
+                }
+                processPlaylist(item.url);
+                if (savedDrawer) savedDrawer.style.display = 'none';
+            });
+
+            div.querySelector('.remove-saved-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                let currentSaved = getSavedPlaylists();
+                currentSaved.splice(index, 1);
+                saveSavedPlaylists(currentSaved);
+                showToast('Liste kaldırıldı');
+            });
+
+            savedPlaylistsList.appendChild(div);
+        });
+    }
+
+    if (savedDrawerBtn && savedDrawer) {
+        savedDrawerBtn.addEventListener('click', () => {
+            renderSavedPlaylists();
+            savedDrawer.style.display = 'flex';
+        });
+    }
+
+    if (closeDrawerBtn && savedDrawer) {
+        closeDrawerBtn.addEventListener('click', () => savedDrawer.style.display = 'none');
+    }
+
+    if (savedDrawer) {
+        savedDrawer.addEventListener('click', (e) => {
+            if (e.target === savedDrawer) savedDrawer.style.display = 'none';
+        });
+    }
+
+    // Save Playlist Button Handler
+    if (btnSavePlaylist) {
+        btnSavePlaylist.addEventListener('click', () => {
+            if (!playlistInput || !playlistInput.value) {
+                showToast('Önce bir playlist analiz edin');
+                return;
+            }
+
+            const title = document.getElementById('playlist-title')?.textContent || 'Çalma Listesi';
+            const cover = document.getElementById('playlist-cover')?.src || '';
+            const owner = document.getElementById('stat-owner')?.textContent || 'Spotify';
+            const trackCount = currentTracks ? currentTracks.length : 0;
+            const url = playlistInput.value;
+
+            let saved = getSavedPlaylists();
+            const exists = saved.some(s => s.url === url || s.title === title);
+
+            if (exists) {
+                saved = saved.filter(s => s.url !== url && s.title !== title);
+                saveSavedPlaylists(saved);
+                btnSavePlaylist.classList.remove('saved');
+                if (saveBtnLabel) saveBtnLabel.textContent = 'Listeyi Kaydet';
+                showToast('Liste kaydedilenlerden çıkarıldı');
+            } else {
+                saved.unshift({ title, cover, owner, trackCount, url, time: Date.now() });
+                saveSavedPlaylists(saved);
+                btnSavePlaylist.classList.add('saved');
+                if (saveBtnLabel) saveBtnLabel.textContent = 'Kaydedildi';
+                showToast('⭐ Liste kaydedilenlerinize eklendi!');
+            }
+        });
+    }
 });
+
 
