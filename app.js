@@ -565,6 +565,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             renderDashboardWithTracks(data.tracks);
         }
+
+        // Save to history & reveal compare bar if user typed a URL
+        if (playlistInput && playlistInput.value) {
+            saveToHistory(data, playlistInput.value);
+            const compareBar = document.getElementById('compare-bar');
+            if (compareBar) compareBar.style.display = 'flex';
+        }
     }
 
     function renderDashboardWithTracks(tracks) {
@@ -833,4 +840,243 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialData = PRESET_DATABASE[initialPresetId];
     spotifyPlayer.src = `https://open.spotify.com/embed/playlist/${initialPresetId}?utm_source=generator&theme=0`;
     renderDashboard(initialData, initialPresetId);
+
+    // =====================================================================
+    // FEATURE: PLAYLIST HISTORY (LocalStorage)
+    // =====================================================================
+    const HISTORY_KEY = 'pulsestream_history';
+    const historyPanel = document.getElementById('history-panel');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+    function getHistory() {
+        try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+        catch { return []; }
+    }
+
+    function saveToHistory(data, url) {
+        if (!data || !data.title) return;
+        let history = getHistory();
+        // Remove duplicates by title
+        history = history.filter(h => h.title !== data.title);
+        history.unshift({
+            title: data.title,
+            cover: data.cover,
+            owner: data.owner,
+            trackCount: data.tracks ? data.tracks.length : 0,
+            url: url,
+            time: Date.now()
+        });
+        // Keep last 10
+        history = history.slice(0, 10);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const history = getHistory();
+        if (!historyPanel || !historyList) return;
+        if (history.length === 0) {
+            historyPanel.style.display = 'none';
+            return;
+        }
+        historyPanel.style.display = 'block';
+        historyList.innerHTML = '';
+        history.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            card.innerHTML = `
+                <img src="${item.cover}" alt="${item.title}" onerror="this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=80&q=80'">
+                <div class="history-card-info">
+                    <div class="history-card-title">${item.title}</div>
+                    <div class="history-card-meta">${item.trackCount} şarkı · ${item.owner}</div>
+                </div>`;
+            card.addEventListener('click', () => {
+                if (playlistInput) {
+                    playlistInput.value = item.url;
+                    if (clearBtn) clearBtn.style.display = 'block';
+                }
+                processPlaylist(item.url);
+            });
+            historyList.appendChild(card);
+        });
+    }
+
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistory();
+        });
+    }
+
+
+    // Load history on startup
+    renderHistory();
+
+    // =====================================================================
+    // FEATURE: PLAYLIST COMPARISON
+    // =====================================================================
+    let compareChartInstance = null;
+    let comparedDataA = null; // first playlist data (current analysis)
+    let comparedDataB = null; // second playlist data
+
+    const compareInput = document.getElementById('compare-input');
+    const compareAnalyzeBtn = document.getElementById('compare-analyze-btn');
+    const compareResult = document.getElementById('compare-result');
+    const closeCompareBtn = document.getElementById('close-compare-btn');
+
+    if (closeCompareBtn) {
+        closeCompareBtn.addEventListener('click', () => {
+            if (compareResult) compareResult.style.display = 'none';
+            if (compareInput) compareInput.value = '';
+        });
+    }
+
+    if (compareAnalyzeBtn && compareInput) {
+        compareAnalyzeBtn.addEventListener('click', async () => {
+            const url = compareInput.value.trim();
+            if (!url) { showToast('İkinci playlist bağlantısını girin'); return; }
+            if (!currentTracks || currentTracks.length === 0) { showToast('Önce bir playlist analiz edin'); return; }
+
+            const parsed = parseSpotifyUrl(url);
+            if (!parsed) { showToast('Geçerli bir Spotify bağlantısı girin'); return; }
+
+            // Loading state
+            const btnText = compareAnalyzeBtn.querySelector('.btn-text');
+            const btnLoader = compareAnalyzeBtn.querySelector('.btn-loader');
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoader) btnLoader.style.display = 'block';
+            compareAnalyzeBtn.disabled = true;
+
+            try {
+                let dataB = null;
+                try { dataB = await fetchRealPlaylistData(parsed.type, parsed.id); } catch(e) {}
+                if (!dataB || !dataB.tracks || dataB.tracks.length === 0) {
+                    if (PRESET_DATABASE[parsed.id]) dataB = PRESET_DATABASE[parsed.id];
+                }
+                if (!dataB || !dataB.tracks) { showToast('İkinci liste yüklenemedi'); return; }
+
+                comparedDataB = dataB;
+                renderComparison(comparedDataB);
+            } finally {
+                if (btnText) btnText.style.display = 'block';
+                if (btnLoader) btnLoader.style.display = 'none';
+                compareAnalyzeBtn.disabled = false;
+            }
+        });
+
+        compareInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); compareAnalyzeBtn.click(); }
+        });
+    }
+
+    function calcAvgMetrics(tracks) {
+        if (!tracks || tracks.length === 0) return { energy:50, dance:50, valence:50, acoustic:30, tempo:110 };
+        const n = tracks.length;
+        return {
+            energy:   Math.round(tracks.reduce((s, t) => s + (t.energy || 50), 0) / n),
+            dance:    Math.round(tracks.reduce((s, t) => s + (t.dance || 50), 0) / n),
+            valence:  Math.round(tracks.reduce((s, t) => s + (t.valence || 50), 0) / n),
+            acoustic: Math.round(tracks.reduce((s, t) => s + (t.acoustic || 30), 0) / n),
+            tempo:    Math.round(tracks.reduce((s, t) => s + (t.tempo || 110), 0) / n),
+        };
+    }
+
+    function renderComparison(dataB) {
+        if (!compareResult) return;
+
+        // Gather A data from current tracks
+        const nameA = document.getElementById('playlist-title')?.textContent || 'Liste A';
+        const coverA = document.getElementById('playlist-cover')?.src || '';
+        const tracksA = currentTracks;
+        const metricsA = calcAvgMetrics(tracksA);
+        const metricsB = calcAvgMetrics(dataB.tracks);
+
+        // Fill info panels
+        document.getElementById('compare-name-a').textContent = nameA;
+        document.getElementById('compare-stat-a').textContent = `${tracksA.length} şarkı`;
+        document.getElementById('compare-cover-a').src = coverA;
+
+        document.getElementById('compare-name-b').textContent = dataB.title;
+        document.getElementById('compare-stat-b').textContent = `${dataB.tracks.length} şarkı`;
+        document.getElementById('compare-cover-b').src = dataB.cover;
+
+        // Draw comparison radar chart
+        const ctx = document.getElementById('compareRadarChart')?.getContext('2d');
+        if (!ctx) return;
+        if (compareChartInstance) compareChartInstance.destroy();
+
+        const labels = ['Enerji', 'Dans', 'Pozitiflik', 'Akustiklik', 'Tempo'];
+        const valA = [metricsA.energy, metricsA.dance, metricsA.valence, metricsA.acoustic, Math.round((metricsA.tempo/180)*100)];
+        const valB = [metricsB.energy, metricsB.dance, metricsB.valence, metricsB.acoustic, Math.round((metricsB.tempo/180)*100)];
+
+        compareChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: nameA,
+                        data: valA,
+                        backgroundColor: 'rgba(29, 185, 84, 0.2)',
+                        borderColor: '#1DB954',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#1DB954',
+                    },
+                    {
+                        label: dataB.title,
+                        data: valB,
+                        backgroundColor: 'rgba(155, 89, 244, 0.2)',
+                        borderColor: '#9b59f4',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#9b59f4',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                        grid: { color: 'rgba(255,255,255,0.08)' },
+                        pointLabels: { color: '#94A3B8', font: { size: 11, weight: '600' } },
+                        ticks: { display: false, max: 100 }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: '#94A3B8', font: { size: 11 }, padding: 16 }
+                    }
+                }
+            }
+        });
+
+        // Metric comparison row
+        const metricsRowEl = document.getElementById('compare-metrics-row');
+        if (metricsRowEl) {
+            const metricDefs = [
+                { key: 'energy', label: 'Enerji' },
+                { key: 'dance', label: 'Dans' },
+                { key: 'valence', label: 'Pozitiflik' },
+                { key: 'acoustic', label: 'Akustiklik' },
+                { key: 'tempo', label: 'Tempo (BPM)' },
+            ];
+            metricsRowEl.innerHTML = metricDefs.map(m => `
+                <div class="compare-metric-item">
+                    <div class="compare-metric-label">${m.label}</div>
+                    <div class="compare-metric-values">
+                        <span class="compare-val-a">${metricsA[m.key]}${m.key !== 'tempo' ? '%' : ''}</span>
+                        <span class="compare-vs">vs</span>
+                        <span class="compare-val-b">${metricsB[m.key]}${m.key !== 'tempo' ? '%' : ''}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        compareResult.style.display = 'block';
+        compareResult.scrollIntoView({ behavior: 'smooth' });
+    }
 });
+

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260731_v6">
+    <link rel="stylesheet" href="style.css?v=20260731_v8">
 </head>
 <body>
     <!-- Giant Semi-Transparent Spinning Background Vinyl -->
@@ -103,6 +103,15 @@
                 </button>
             </div>
 
+            <!-- Playlist History Panel -->
+            <div id="history-panel" style="display:none;">
+                <div class="history-header">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> Son Analizler</span>
+                    <button id="clear-history-btn" title="Geçmişi Temizle"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+                <div class="history-list" id="history-list"></div>
+            </div>
+
             <!-- Playlist Smart Tools & Quick Sorting Toolbar -->
             <div class="playlist-toolbar-container">
                 <div class="toolbar-group">
@@ -135,6 +144,47 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Comparison Tool -->
+            <div class="compare-bar" id="compare-bar" style="display:none;">
+                <div class="compare-label"><i class="fa-solid fa-code-compare"></i> Karşılaştır:</div>
+                <div class="compare-input-wrap">
+                    <i class="fa-solid fa-link input-icon"></i>
+                    <input type="text" id="compare-input" placeholder="İkinci playlist bağlantısını yapıştırın..." autocomplete="off">
+                    <button type="button" id="compare-analyze-btn" class="btn-primary" style="flex-shrink:0;">
+                        <span class="btn-text"><i class="fa-solid fa-chart-pie"></i> Karşılaştır</span>
+                        <div class="btn-loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Result Section -->
+        <section class="compare-result-section card-glass" id="compare-result" style="display:none;">
+            <div class="compare-result-header">
+                <h3><i class="fa-solid fa-code-compare"></i> Playlist Karşılaştırması</h3>
+                <button id="close-compare-btn" class="clear-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="compare-result-body">
+                <div class="compare-playlist-info" id="compare-info-a">
+                    <img id="compare-cover-a" src="" alt="">
+                    <div>
+                        <div class="compare-playlist-name" id="compare-name-a">-</div>
+                        <div class="compare-playlist-stat" id="compare-stat-a">-</div>
+                    </div>
+                </div>
+                <div class="compare-chart-wrap">
+                    <canvas id="compareRadarChart"></canvas>
+                </div>
+                <div class="compare-playlist-info" id="compare-info-b">
+                    <img id="compare-cover-b" src="" alt="">
+                    <div>
+                        <div class="compare-playlist-name" id="compare-name-b">-</div>
+                        <div class="compare-playlist-stat" id="compare-stat-b">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="compare-metrics-row" id="compare-metrics-row"></div>
         </section>
 
         <!-- Main Dashboard Section -->
@@ -293,6 +343,6 @@
         </main>
     </div>
 
-    <script src="app.js?v=20260731_v6"></script>
+    <script src="app.js?v=20260731_v8"></script>
 </body>
 </html>
