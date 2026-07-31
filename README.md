@@ -13,27 +13,32 @@ Kullanıcının tekli playlist analizi ile ikili playlist karşılaştırma (VS)
 
 ![Ana Arama ve Mod Seçim Paneli](docs/images/header_search.png)
 
-### 2. İkili Playlist Karşılaştırması (VS Modu)
+### 2. İki Playlist Karşılaştır (VS Modu) Arama Arayüzü
+Karşılaştırılmak istenen 1. ve 2. Spotify playlist bağlantılarının yan yana girildiği ve hızlı karşılaştırmanın tetiklendiği özel arama kartı.
+
+![İki Playlist Karşılaştır Arama Arayüzü](docs/images/vs_mode_search.png)
+
+### 3. İkili Playlist Karşılaştırması ve Yan Yana Listeler
 İki farklı Spotify çalma listesinin şarkılarının yan yana listelendiği, ses profili farklarının gösterildiği karşılaştırma ekranı.
 
 ![İkili Playlist Karşılaştırması](docs/images/compare_tracklists.png)
 
-### 3. Ses Profili ve Popülerlik Analiz Paneli
+### 4. Ses Profili ve Popülerlik Analiz Paneli
 Radar grafik (Ses Profili) ve Bar grafik (Popülerlik Dağılımı) ile playlist metriklerinin çok boyutlu görselleştirmesi.
 
 ![Dashboard ve Analiz Paneli](docs/images/dashboard_charts.png)
 
-### 4. Öne Çıkan Sanatçılar ve Bağlamsal Özet
+### 5. Öne Çıkan Sanatçılar ve Bağlamsal Özet
 Listenin en çok tekrarlanan sanatçıları ve metrik farklarına göre dinamik olarak oluşturulan içerik özeti.
 
 ![Öne Çıkan Sanatçılar ve Özet](docs/images/artists_mood_summary.png)
 
-### 5. Şarkı Önizleme ve Canlı Oynatıcı Paneli
+### 6. Şarkı Önizleme ve Canlı Oynatıcı Paneli
 Şarkı satırına veya yeşil oynatma butonuna tıklandığında parçanın 30 saniyelik ses önizlemesinin canlı oynatıcıya yüklenmesi ve plak animasyonunun aktifleşmesi.
 
 ![Şarkı Önizleme ve Canlı Oynatıcı](docs/images/tracklist_playback.png)
 
-### 6. Tam Parça Dinleme (YouTube Music Entegrasyonu)
+### 7. Tam Parça Dinleme (YouTube Music Entegrasyonu)
 Spotify 30 saniye kısıtlamasını aşmak için her şarkının sağ tarafında otomatik olarak oluşturulan ve kullanıcının şarkının tamamını dinlemesini sağlayan YouTube Music arama/yönlendirme sayfası.
 
 ![YouTube Music Tam Şarkı Dinleme](docs/images/yt_music_player.png)
