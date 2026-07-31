@@ -660,6 +660,54 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBarChart(tracks);
     }
 
+    // Centralized Track Player Execution
+    let currentAudioPreview = null;
+
+    function playTrack(track, clickedItem) {
+        if (!track) return;
+
+        // 1. Highlight active item across tracklists
+        document.querySelectorAll('.track-item').forEach(i => i.classList.remove('active'));
+        if (clickedItem) clickedItem.classList.add('active');
+
+        // 2. Update vinyl cover and spinning state
+        const vinylCover = document.getElementById('vinyl-cover');
+        if (vinylCover && track.image) {
+            vinylCover.src = track.image;
+        }
+        updateVinylPlayerState(true);
+
+        // 3. Stop previous audio preview if playing
+        if (currentAudioPreview) {
+            currentAudioPreview.pause();
+            currentAudioPreview = null;
+        }
+
+        // 4. Play HTML5 Audio 30s Preview if preview_url is available
+        if (track.preview_url) {
+            try {
+                currentAudioPreview = new Audio(track.preview_url);
+                currentAudioPreview.play().catch(e => console.log('Audio preview autoplay:', e));
+            } catch (e) {
+                console.log('Audio preview error:', e);
+            }
+        }
+
+        // 5. Update main Spotify Embed player iframe
+        const playerEl = document.getElementById('spotify-player');
+        if (playerEl) {
+            const trackId = (track.id && track.id.length === 22 && !track.id.startsWith('procedural_') && !track.id.startsWith('track_')) 
+                ? track.id 
+                : null;
+
+            if (trackId) {
+                playerEl.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
+            } else if (currentPlaylistId) {
+                playerEl.src = `https://open.spotify.com/embed/playlist/${currentPlaylistId}?utm_source=generator&theme=0`;
+            }
+        }
+    }
+
     // Render Tracklist Items
     function renderTracklist(tracks) {
         document.getElementById('track-count-badge').textContent = tracks.length;
@@ -691,20 +739,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Click event to change embed player track & vinyl artwork
+            // Click event to play track in player, update vinyl, and highlight active row
             item.addEventListener('click', () => {
-                document.querySelectorAll('.track-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
-                if (vinylCover && track.image) {
-                    vinylCover.src = track.image;
-                }
-                updateVinylPlayerState(true);
-
-                // Switch Spotify Embed player to specific track if valid id
-                if (track.id && !track.id.startsWith('procedural_') && !track.id.startsWith('track_')) {
-                    spotifyPlayer.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`;
-                }
+                playTrack(track, item);
             });
 
             tracklistContainer.appendChild(item);
@@ -1287,11 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             item.addEventListener('click', () => {
-                document.querySelectorAll('.compare-tracklist-items .track-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                if (track.id && !track.id.startsWith('procedural_') && !track.id.startsWith('track_')) {
-                    if (spotifyPlayer) spotifyPlayer.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`;
-                }
+                playTrack(track, item);
             });
 
             container.appendChild(item);

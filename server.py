@@ -110,8 +110,16 @@ class SpotifyServerHandler(http.server.SimpleHTTPRequestHandler):
                     sec_val = dur_sec % 60
                     duration_str = f"{min_val}:{sec_val:02d}"
 
-                    uri = t.get('uri', '') or t.get('id', '')
-                    track_id = uri.split(':')[-1] if 'spotify:track:' in str(uri) else (str(uri) if len(str(uri)) == 22 else f"track_{idx}")
+                    uri = t.get('uri', '') or t.get('id', '') or (t.get('track') or {}).get('uri', '') or (t.get('track') or {}).get('id', '') or (t.get('entity') or {}).get('id', '')
+                    uri_str = str(uri)
+                    if 'spotify:track:' in uri_str:
+                        track_id = uri_str.split(':')[-1]
+                    elif len(uri_str) == 22 and uri_str.isalnum():
+                        track_id = uri_str
+                    else:
+                        track_id = f"track_{idx}"
+
+                    preview_url = t.get('audioUrl') or t.get('previewUrl') or t.get('preview_url') or (t.get('audioPreview') or {}).get('url') or ""
 
                     audio_features = self.analyze_track_sentiment(str(track_name), str(artist_name), str(title))
 
@@ -130,7 +138,8 @@ class SpotifyServerHandler(http.server.SimpleHTTPRequestHandler):
                         'valence': audio_features['valence'],
                         'tempo': audio_features['tempo'],
                         'acoustic': audio_features['acoustic'],
-                        'image': track_img
+                        'image': track_img,
+                        'preview_url': preview_url
                     })
 
                 if len(formatted_tracks) > 0:
