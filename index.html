@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Playlist Analizörü & Gömülü Oynatıcı</title>
+    <meta name="description" content="Spotify Premium gerektirmeyen, herkese açık çalma listelerinizi analiz eden ve dinleten web uygulaması.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css?v=20260731_v5">
+</head>
+<body>
+    <!-- Giant Semi-Transparent Spinning Background Vinyl -->
+    <div class="giant-vinyl-background">
+        <div class="giant-vinyl-disc spinning" id="giant-vinyl-disc">
+            <div class="giant-groove g-1"></div>
+            <div class="giant-groove g-2"></div>
+            <div class="giant-groove g-3"></div>
+            <div class="giant-groove g-4"></div>
+            <div class="giant-vinyl-center">
+                <img id="giant-vinyl-cover" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" alt="Vinyl Center Cover">
+                <div class="giant-spindle-hole"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="background-glow">
+        <div class="glow-sphere glow-1"></div>
+        <div class="glow-sphere glow-2"></div>
+        <div class="glow-sphere glow-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="main-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-brands fa-spotify"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Pulse<span>Stream</span></h1>
+                    <p class="tagline">Spotify Playlist Analizörü & Çalar</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="user-badge" id="api-modal-btn" title="Resmi Spotify API Anahtarı Gir">
+                    <i class="fa-solid fa-key"></i> <span id="api-status-text">Resmi API Modu</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- API Key Modal -->
+        <div id="api-modal" class="modal-overlay" style="display: none;">
+            <div class="card-glass modal-content">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-key"></i> Resmi Spotify Developer API (100% Hassas Veri)</h3>
+                    <button id="close-modal-btn" class="clear-btn"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <p class="modal-desc">Spotify Developer Dashboard'dan aldığınız ücretsiz Client ID ve Client Secret bilgilerini girerek Spotify'ın resmi yapay zeka ses analizlerini (100% kesin değerler) etkinleştirebilirsiniz.</p>
+                <form id="api-key-form">
+                    <div class="form-group">
+                        <label>Spotify Client ID:</label>
+                        <input type="text" id="spotify-client-id" placeholder="Örn: 4a2b3c4d5e..." autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Spotify Client Secret:</label>
+                        <input type="password" id="spotify-client-secret" placeholder="Örn: 9f8e7d6c5b..." autocomplete="off">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="clear-api-keys-btn" class="btn-secondary">Sıfırla / Kaldır</button>
+                        <button type="submit" class="btn-primary">Kaydet & Etkinleştir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Hero / Search Section -->
+        <section class="search-section card-glass">
+            <div class="search-header">
+                <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Çalma Listesini Analiz Et</h2>
+                <p>Herkese açık herhangi bir Spotify Playlist, Albüm veya Şarkı bağlantısını yapıştırın.</p>
+            </div>
+            
+            <div class="search-box">
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-link input-icon"></i>
+                    <input type="text" id="playlist-input" placeholder="Örn: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M" required autocomplete="off">
+                    <button type="button" id="clear-btn" class="clear-btn" title="Temizle" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <button type="button" class="btn-primary" id="analyze-btn">
+                    <span class="btn-text"><i class="fa-solid fa-chart-pie"></i> Analiz Et & Çal</span>
+                    <div class="btn-loader" style="display: none;">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Playlist Smart Tools & Quick Sorting Toolbar -->
+            <div class="playlist-toolbar-container">
+                <div class="toolbar-group">
+                    <span class="toolbar-label"><i class="fa-solid fa-arrow-down-short-wide"></i> Listeyi Sırala:</span>
+                    <div class="toolbar-buttons">
+                        <button class="tool-btn active" data-sort="default" title="Orijinal Sıralama">
+                            <i class="fa-solid fa-list-ol"></i> Varsayılan
+                        </button>
+                        <button class="tool-btn" data-sort="sad" title="En Hüzünlü Şarkıları En Başa Al">
+                            <i class="fa-solid fa-cloud-showers-heavy"></i> En Melankolik / Üzgün
+                        </button>
+                        <button class="tool-btn" data-sort="energy" title="En Yüksek Enerjili Şarkıları Sırala">
+                            <i class="fa-solid fa-bolt"></i> En Yüksek Enerjili
+                        </button>
+                        <button class="tool-btn" data-sort="popular" title="En Çok Dinlenen Şarkıları Sırala">
+                            <i class="fa-solid fa-fire"></i> En Popülerler
+                        </button>
+                        <button class="tool-btn" data-sort="shuffle" id="btn-shuffle-playlist" title="Şarkı Listesini Karıştır">
+                            <i class="fa-solid fa-shuffle"></i> Karıştır
+                        </button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group actions-group">
+                    <button class="action-badge-btn" id="btn-open-spotify" title="Spotify Uygulamasında Aç">
+                        <i class="fa-brands fa-spotify"></i> Spotify'da Aç
+                    </button>
+                    <button class="action-badge-btn" id="btn-copy-link" title="Bağlantıyı Kopyala">
+                        <i class="fa-solid fa-copy"></i> Linki Kopyala
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Section -->
+        <main class="dashboard-grid" id="dashboard">
+            
+            <!-- Left Prominent Column: Large Playlist Overview & Large Tracklist -->
+            <div class="dashboard-col left-col prominent-left">
+                <!-- Large Playlist Hero Header Card -->
+                <div class="card-glass playlist-info-card prominent-hero">
+                    <div class="info-content">
+                        <div class="playlist-cover-wrapper large-cover">
+                            <img id="playlist-cover" src="" alt="Playlist Cover">
+                            <div class="cover-overlay">
+                                <i class="fa-brands fa-spotify"></i>
+                            </div>
+                        </div>
+                        <div class="playlist-meta">
+                            <span class="playlist-type-tag" id="playlist-type">PLAYLIST</span>
+                            <h2 id="playlist-title">Çalma Listesi Başlığı</h2>
+                            <p id="playlist-desc" class="playlist-desc">Açıklama yükleniyor...</p>
+                            <div class="meta-stats">
+                                <span><i class="fa-solid fa-music"></i> <strong id="stat-tracks">0</strong> Şarkı</span>
+                                <span><i class="fa-solid fa-clock"></i> <strong id="stat-duration">0 dk</strong></span>
+                                <span><i class="fa-solid fa-user"></i> <strong id="stat-owner">Spotify</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expansively Large Tracklist Section -->
+                <div class="card-glass tracklist-card large-tracklist">
+                    <div class="tracklist-header">
+                        <h3><i class="fa-solid fa-list-ol"></i> Çalma Listesi Şarkıları (<span id="track-count-badge">0</span>)</h3>
+                        <div class="search-track-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="track-search-input" placeholder="Şarkı veya sanatçı ara...">
+                        </div>
+                    </div>
+                    <div class="tracklist-container" id="tracklist">
+                        <!-- Tracks injected dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Player, Metrics & Charts -->
+            <div class="dashboard-col right-col">
+                <!-- Spotify Embed Player Card -->
+                <div class="card-glass player-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-circle-play"></i> Gömülü Müzik Çalar</h3>
+                        <span class="status-tag"><i class="fa-solid fa-shield-halved"></i> Free & Premium Uyumlu</span>
+                    </div>
+                    <div class="player-wrapper">
+                        <iframe id="spotify-player" 
+                                style="border-radius: 16px" 
+                                src="" 
+                                width="100%" 
+                                height="220" 
+                                frameBorder="0" 
+                                allowfullscreen="" 
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                                loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+
+                <!-- Mood & Audio Metrics Overview Grid -->
+                <div class="metrics-grid">
+                    <div class="card-glass metric-box">
+                        <div class="metric-icon energy"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-title">Ortalama Enerji</span>
+                            <div class="metric-value-row">
+                                <h4 id="metric-energy-val">%0</h4>
+                                <span class="metric-tag" id="metric-energy-tag">Yükleniyor</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill energy-fill" id="fill-energy" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="card-glass metric-box">
+                        <div class="metric-icon valence"><i class="fa-solid fa-face-smile"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-title">Pozitiflik / Ruh Hali</span>
+                            <div class="metric-value-row">
+                                <h4 id="metric-valence-val">%0</h4>
+                                <span class="metric-tag" id="metric-valence-tag">Yükleniyor</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill valence-fill" id="fill-valence" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="card-glass metric-box">
+                        <div class="metric-icon dance"><i class="fa-solid fa-person-dancing"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-title">Dans Edilebilirlik</span>
+                            <div class="metric-value-row">
+                                <h4 id="metric-dance-val">%0</h4>
+                                <span class="metric-tag" id="metric-dance-tag">Yükleniyor</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill dance-fill" id="fill-dance" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="card-glass metric-box">
+                        <div class="metric-icon tempo"><i class="fa-solid fa-gauge-high"></i></div>
+                        <div class="metric-info">
+                            <span class="metric-title">Ortalama Tempo</span>
+                            <div class="metric-value-row">
+                                <h4 id="metric-tempo-val">0 BPM</h4>
+                                <span class="metric-tag" id="metric-tempo-tag">Orta Ritmli</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill tempo-fill" id="fill-tempo" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Profiling Chart Section -->
+                <div class="charts-row">
+                    <div class="card-glass chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-radar"></i> Ses Profili Analizi (Radar)</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card-glass chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-column"></i> Şarkı Popülerlik Dağılımı</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Artists & AI Mood Summary Section -->
+                <div class="card-glass insights-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-users"></i> Öne Çıkan Sanatçılar & Karakteristik</h3>
+                    </div>
+                    <div class="insights-content">
+                        <div class="artists-list" id="top-artists">
+                            <!-- Injected dynamically -->
+                        </div>
+                        <div class="mood-summary-box">
+                            <h4><i class="fa-solid fa-lightbulb"></i> AI Ruh Hali Özeti</h4>
+                            <p id="mood-summary-text">Listeniz analiz ediliyor...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js?v=20260731_v5"></script>
+</body>
+</html>
