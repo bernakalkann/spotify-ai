@@ -959,6 +959,7 @@ body {
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: var(--transition);
+    gap: 12px;
 }
 
 .track-item:hover {
@@ -976,6 +977,9 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .track-index {
@@ -984,6 +988,7 @@ body {
     color: var(--text-muted);
     width: 20px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .track-img {
@@ -999,6 +1004,9 @@ body {
 .track-details {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .track-name {
@@ -1008,18 +1016,24 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    width: 100%;
 }
 
 .track-artist {
     font-size: 0.8rem;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .track-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .track-duration {
