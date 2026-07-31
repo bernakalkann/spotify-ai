@@ -1196,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modeSingleBtn.classList.remove('active');
             singleSearchBox.style.display = 'none';
             dualSearchBox.style.display = 'flex';
-            if (searchTitle) searchTitle.innerHTML = '<i class="fa-solid fa-code-compare"></i> ⚡ İki Playlist Karşılaştır (VS Modu)';
+            if (searchTitle) searchTitle.innerHTML = '<i class="fa-solid fa-code-compare"></i> İki Playlist Karşılaştır (VS Modu)';
             if (searchSubtitle) searchSubtitle.textContent = 'Karşılaştırmak istediğiniz iki Spotify Playlist bağlantısını aşağıya yapıştırın.';
         });
     }
