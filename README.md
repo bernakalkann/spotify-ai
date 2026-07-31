@@ -1,6 +1,10 @@
 # PulseStream: Spotify Playlist AI Analyzer & Comparison Platform
 
-PulseStream, Spotify çalma listelerini derinlemesine analiz eden, ses metriklerini karşılaştıran ve görsel veri panelleri sunan yapay zeka odaklı bir web uygulamasıdır. 
+> **Herkese açık çalma listelerini analiz eden, karşılaştıran ve yorumlayan bir makine!**
+
+PulseStream, Spotify çalma listelerini derinlemesine analiz eden, ses metriklerini karşılaştıran ve görsel veri panelleri sunan yapay zeka odaklı bir web uygulamasıdır.
+
+> **Önemli Kullanım Notu:** Çalma listelerinizin analiz edilebilmesi ve karşılaştırılabilmesi için Spotify üzerinde **"Herkese Açık" (Public)** konumda olması gerekmektedir. Gizli veya kişiye özel listeler üzerinde analiz ve karşılaştırma yapılamaz.
 
 Bu proje, yapay zeka (AI) ve veri işleme teknolojilerini öğrenme sürecinde pratik deneyim kazanmak ve teorik kavramları pekiştirmek amacıyla geliştirilmiştir.
 
