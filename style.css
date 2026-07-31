@@ -1754,4 +1754,82 @@ body {
     color: #1ED760 !important;
 }
 
+/* ===================== DUAL COMPARE TRACKLISTS GRID ===================== */
+.compare-tracklists-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 850px) {
+    .compare-tracklists-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.compare-tracklist-col {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.compare-tracklist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.compare-tracklist-header h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-col-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.compare-col-badge.tag-a {
+    background: rgba(29, 185, 84, 0.2);
+    color: #1DB954;
+    border: 1px solid rgba(29, 185, 84, 0.4);
+}
+
+.compare-col-badge.tag-b {
+    background: rgba(155, 89, 244, 0.2);
+    color: #9b59f4;
+    border: 1px solid rgba(155, 89, 244, 0.4);
+}
+
+.compare-tracklist-items {
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+
 

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20260731_v9">
+    <link rel="stylesheet" href="style.css?v=20260731_v10">
 </head>
 <body>
     <!-- Giant Semi-Transparent Spinning Background Vinyl -->
@@ -288,6 +288,31 @@
                 </div>
             </div>
             <div class="compare-metrics-row" id="compare-metrics-row"></div>
+
+            <!-- Side-by-Side Dual Tracklists for Comparison -->
+            <div class="compare-tracklists-grid">
+                <!-- Playlist A Tracklist Column -->
+                <div class="compare-tracklist-col">
+                    <div class="compare-tracklist-header">
+                        <span class="compare-col-badge tag-a"><i class="fa-solid fa-list-ul"></i> 1. Liste</span>
+                        <h4 id="compare-col-title-a">1. Çalma Listesi Şarkıları</h4>
+                    </div>
+                    <div class="compare-tracklist-items tracklist-scroll" id="compare-tracklist-a">
+                        <!-- Dynamic track items for Playlist A -->
+                    </div>
+                </div>
+
+                <!-- Playlist B Tracklist Column -->
+                <div class="compare-tracklist-col">
+                    <div class="compare-tracklist-header">
+                        <span class="compare-col-badge tag-b"><i class="fa-solid fa-list-ul"></i> 2. Liste</span>
+                        <h4 id="compare-col-title-b">2. Çalma Listesi Şarkıları</h4>
+                    </div>
+                    <div class="compare-tracklist-items tracklist-scroll" id="compare-tracklist-b">
+                        <!-- Dynamic track items for Playlist B -->
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Main Dashboard Section -->
@@ -446,6 +471,6 @@
         </main>
     </div>
 
-    <script src="app.js?v=20260731_v9"></script>
+    <script src="app.js?v=20260731_v10"></script>
 </body>
 </html>

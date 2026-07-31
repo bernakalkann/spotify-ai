@@ -1075,8 +1075,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`).join('');
         }
 
+        // Fill Column Titles
+        const titleA = document.getElementById('compare-col-title-a');
+        if (titleA) titleA.textContent = `${nameA} (${tracksA.length} Şarkı)`;
+
+        const titleB = document.getElementById('compare-col-title-b');
+        if (titleB) titleB.textContent = `${dataB.title} (${dataB.tracks.length} Şarkı)`;
+
+        // Render both tracklists side-by-side
+        renderCompareTracklist('compare-tracklist-a', tracksA);
+        renderCompareTracklist('compare-tracklist-b', dataB.tracks);
+
         compareResult.style.display = 'block';
         compareResult.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderCompareTracklist(containerId, tracks) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!tracks || tracks.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted); padding:10px;">Şarkı bulunamadı</div>';
+            return;
+        }
+
+        tracks.forEach((track, index) => {
+            const item = document.createElement('div');
+            item.className = 'track-item';
+            const fallbackArt = MUSIC_ARTWORK_FALLBACKS[index % MUSIC_ARTWORK_FALLBACKS.length];
+            const art = track.image || fallbackArt;
+
+            item.innerHTML = `
+                <div class="track-left">
+                    <span class="track-index">${index + 1}</span>
+                    <img src="${art}" alt="${track.name}" class="track-img" onerror="this.onerror=null; this.src='${fallbackArt}';">
+                    <div class="track-details">
+                        <span class="track-name">${track.name}</span>
+                        <span class="track-artist">${track.artist}</span>
+                    </div>
+                </div>
+                <div class="track-right">
+                    <span class="track-duration">${track.duration || '3:00'}</span>
+                    <div class="play-icon-btn"><i class="fa-solid fa-play"></i></div>
+                </div>
+            `;
+
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.compare-tracklist-items .track-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                if (track.id && !track.id.startsWith('procedural_') && !track.id.startsWith('track_')) {
+                    if (spotifyPlayer) spotifyPlayer.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`;
+                }
+            });
+
+            container.appendChild(item);
+        });
     }
 
     // =====================================================================
