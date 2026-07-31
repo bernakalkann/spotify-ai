@@ -77,36 +77,54 @@ document.addEventListener('DOMContentLoaded', () => {
         toast._t = setTimeout(() => toast.style.opacity = '0', 2200);
     }
 
+    let originalPlaylistTracksB = [];
+
+    function sortTracksArray(tracksArray, mode, originalArray) {
+        if (!tracksArray || tracksArray.length === 0) return [];
+        let sorted = [...tracksArray];
+
+        if (mode === 'sad') {
+            sorted.sort((a, b) => a.valence - b.valence);
+        } else if (mode === 'energy') {
+            sorted.sort((a, b) => b.energy - a.energy);
+        } else if (mode === 'popular') {
+            sorted.sort((a, b) => b.popularity - a.popularity);
+        } else if (mode === 'shuffle') {
+            for (let i = sorted.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+            }
+        } else if (mode === 'default') {
+            sorted = originalArray && originalArray.length > 0 ? [...originalArray] : [...tracksArray];
+        }
+        return sorted;
+    }
+
     function applyTrackSortMode(mode) {
         if (!currentTracks || currentTracks.length === 0) {
             showToast('⚡ Önce bir Spotify listesi analiz edin!');
             return;
         }
 
-        let sorted = [...currentTracks];
+        // Sort Playlist A
+        const sortedA = sortTracksArray(currentTracks, mode, originalPlaylistTracks);
 
-        if (mode === 'sad') {
-            sorted.sort((a, b) => a.valence - b.valence);
-            showToast('🌧 En melankolik şarkılar en başta');
-        } else if (mode === 'energy') {
-            sorted.sort((a, b) => b.energy - a.energy);
-            showToast('⚡ En yüksek enerjili şarkılar en başta');
-        } else if (mode === 'popular') {
-            sorted.sort((a, b) => b.popularity - a.popularity);
-            showToast('🔥 En popüler şarkılar en başta');
-        } else if (mode === 'shuffle') {
-            for (let i = sorted.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
-            }
-            showToast('🔀 Liste karıştırıldı');
-        } else if (mode === 'default') {
-            sorted = [...originalPlaylistTracks];
-            showToast('↩ Orijinal sıralama geri yüklendi');
+        // Show Toast
+        if (mode === 'sad') showToast('🌧 En melankolik şarkılar en başta (Her iki liste)');
+        else if (mode === 'energy') showToast('⚡ En yüksek enerjili şarkılar en başta (Her iki liste)');
+        else if (mode === 'popular') showToast('🔥 En popüler şarkılar en başta (Her iki liste)');
+        else if (mode === 'shuffle') showToast('🔀 Her iki liste de karıştırıldı');
+        else if (mode === 'default') showToast('↩ Orijinal sıralama geri yüklendi');
+
+        // Re-render Playlist A (Main Dashboard & Compare Column A)
+        renderTracklist(sortedA);
+        renderCompareTracklist('compare-tracklist-a', sortedA);
+
+        // Sort & Re-render Playlist B if comparison mode is active
+        if (comparedDataB && comparedDataB.tracks && comparedDataB.tracks.length > 0) {
+            const sortedB = sortTracksArray(comparedDataB.tracks, mode, originalPlaylistTracksB);
+            renderCompareTracklist('compare-tracklist-b', sortedB);
         }
-
-        // Only re-render the tracklist, not the full dashboard (keeps charts intact)
-        renderTracklist(sorted);
     }
 
     if (btnOpenSpotify) {
@@ -1074,6 +1092,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`).join('');
         }
+
+        // Save original tracks B for sorting reset
+        originalPlaylistTracksB = [...dataB.tracks];
 
         // Fill Column Titles
         const titleA = document.getElementById('compare-col-title-a');
