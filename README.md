@@ -28,6 +28,16 @@ Listenin en çok tekrarlanan sanatçıları ve metrik farklarına göre dinamik 
 
 ![Öne Çıkan Sanatçılar ve Özet](docs/images/artists_mood_summary.png)
 
+### 5. Şarkı Önizleme ve Canlı Oynatıcı Paneli
+Şarkı satırına veya yeşil oynatma butonuna tıklandığında parçanın 30 saniyelik ses önizlemesinin canlı oynatıcıya yüklenmesi ve plak animasyonunun aktifleşmesi.
+
+![Şarkı Önizleme ve Canlı Oynatıcı](docs/images/tracklist_playback.png)
+
+### 6. Tam Parça Dinleme (YouTube Music Entegrasyonu)
+Spotify 30 saniye kısıtlamasını aşmak için her şarkının sağ tarafında otomatik olarak oluşturulan ve kullanıcının şarkının tamamını dinlemesini sağlayan YouTube Music arama/yönlendirme sayfası.
+
+![YouTube Music Tam Şarkı Dinleme](docs/images/yt_music_player.png)
+
 ---
 
 ## Yapay Zeka Öğrenme Sürecinde Pekiştirilen Kavramlar
@@ -44,11 +54,15 @@ Proje, veri getirme, veriyi zenginleştirme ve çıktı üretme adımlarını ka
 * Liste üzerindeki parçaların melankoli (Valence), enerji ve popülerlik skoru değerlerine göre sıralanması.
 * İkili karşılaştırma modunda her iki listenin bağımsız ve eşzamanlı olarak aynı kuralla sıralanması.
 
-### 3. Çok Boyutlu Veri Görselleştirme (Multi-Dimensional Data Visualization)
+### 3. Dinamik Oynatıcı Mimarisi ve Dış Servis Entegrasyonu (YouTube Music API Bridge)
+* **30 Saniyelik Ses Önizleme:** Şarkı satırına veya yeşil çalma ikonuna basıldığında parçanın 30 saniyelik ses örneğinin HTML5 Audio ve Spotify Embed oynatıcısı üzerinde anında çalması.
+* **Tam Parça Dinleme Yönlendirmesi:** Spotify ücretsiz üyelik sınırlamasını aşmak adına, şarkının tamamını kesintisiz dinlemek isteyen kullanıcılar için otomatik olarak şarkı adı ve sanatçı bilgisiyle beslenen doğrudan YouTube Music yönlendirme butonları.
+
+### 4. Çok Boyutlu Veri Görselleştirme (Multi-Dimensional Data Visualization)
 * Ses metriklerinin 5 eksenli Radar Grafiği üzerinde çakıştırılarak görselleştirilmesi.
 * Şarkı popülerlik skorlarının grup bar grafikler üzerinde karşılaştırılması.
 
-### 4. Kullanıcı Durum Yönetimi ve İstemci Tarafı Kalıcılık
+### 5. Kullanıcı Durum Yönetimi ve İstemci Tarafı Kalıcılık
 * LocalStorage tabanlı oturum yönetimi, geçmiş aramalar ve kullanıcıya özel favori liste saklama paneli.
 
 ---
@@ -57,8 +71,9 @@ Proje, veri getirme, veriyi zenginleştirme ve çıktı üretme adımlarını ka
 
 * **Tekli Playlist Analizi:** Herkese açık Spotify bağlantılarının ses profili, ortalama süresi ve metrik analizi.
 * **Çiftli Playlist Karşılaştırması (VS Modu):** İki listenin radarda üst üste bindirilmiş grafik analizi ve side-by-side şarkı karşılaştırması.
+* **30 Saniyelik Şarkı Çalma & Önizleme:** Şarkı satırına veya yeşil oynat butonuna basıldığında şarkının önizleme sesinin anında çalması.
+* **Tam Parça Dinleme (YouTube Music Butonu):** Şarkının tamamını dinlemek isteyenler için her satırın yanında otomatik YouTube Music yönlendirme bağlantısı.
 * **Akıllı Sıralama:** Melankoli, Enerji, Popülerlik ve Karıştırma modları.
-* **YouTube Music Entegrasyonu:** Spotify 30 saniye önizleme kısıtlamasını aşmak için her şarkının yanındaki YouTube Music doğrudan dinleme bağlantısı.
 * **Kullanıcı Hesabı ve Favori Listeler:** Kullanıcı oturumu ile favori playlist saklama ve kayan yan panel (Drawer).
 
 ---
